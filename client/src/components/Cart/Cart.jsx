@@ -1,58 +1,64 @@
 import React from "react";
 import { DeleteOutlined } from "@mui/icons-material";
+import { useDispatch, useSelector } from "react-redux";
+import { removeItem, resetCart } from "../../redux/cartReducer";
+import { loadStripe } from "@stripe/stripe-js";
+import { makeRequest } from "../../makeRequest";
 import "./Cart.scss";
 
 const Cart = () => {
-  const data = [
-    {
-      id: 1,
-      title: "Fjallraven - Foldsack No. 1 Backpack, Fits 15 Laptops",
-      price: 109.95,
-      description:
-        "Your perfect pack for everyday use and walks in the forest. Stash your laptop (up to 15 inches) in the padded sleeve, your everyday",
-      category: "men's clothing",
-      image: "https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_.jpg",
-      rating: {
-        rate: 3.9,
-        count: 120,
-      },
-    },
-    {
-      id: 2,
-      title: "Mens Casual Premium Slim Fit T-Shirts ",
-      price: 22.3,
-      description:
-        "Slim-fitting style, contrast raglan long sleeve, three-button henley placket, light weight & soft fabric for breathable and comfortable wearing. And Solid stitched shirts with round neck made for durability and a great fit for casual fashion wear and diehard baseball fans. The Henley style round neckline includes a three-button placket.",
-      category: "men's clothing",
-      image:
-        "https://fakestoreapi.com/img/71-3HjGNDUL._AC_SY879._SX._UX._SY._UY_.jpg",
-      rating: {
-        rate: 4.1,
-        count: 259,
-      },
-    },
-  ];
+  const products = useSelector((state) => state.cart.products);
+  const dispatch = useDispatch();
+
+  const totalPrice = () => {
+    let total = 0;
+    products.forEach((item) => (total += item.quantity * item.price));
+    return total;
+  };
+
+  const stripePromise = loadStripe(
+    "pk_test_51Kdp2WSChFijIwb9dE4W2habSP6Ulh7qhmSi1S59xhPsfBwLk1ECmGa4YsJQGA6I0SrMK01BGs1haj2y3bntcFWv00G1JT5f8z"
+  );
+
+  const handlePayment = async () => {
+    try {
+      const stripe = await stripePromise;
+      const res = await makeRequest.post("/orders", { products });
+      await stripe.redirectToCheckout({
+        sessionId: res.data.stripeSession.id,
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   return (
     <div className="cart">
       <h1>Products in your cart</h1>
-      {data.map((item) => (
+      {products?.map((item) => (
         <div className="item" key={item.id}>
-          <img src={item.image} alt="" />
+          <img src={item.img} alt="" />
           <div className="details">
             <h1>{item.title}</h1>
-            <p>{item.description.substring(0, 100)}</p>
-            <div className="price">1 M ₹{item.price}</div>
+            <p>{item?.desc?.substring(0, 100)}</p>
+            <div className="price">
+              {item.quantity} * ₹{item.price}
+            </div>
           </div>
-          <DeleteOutlined className="delete" />
+          <DeleteOutlined
+            className="delete"
+            onClick={() => dispatch(removeItem(item.id))}
+          />
         </div>
       ))}
       <div className="total">
         <span>SUBTOTAL</span>
-        <span>₹123</span>
+        <span>₹{totalPrice()}</span>
       </div>
-      <button>PROCEED TO CHECKOUT</button>
-      <span className="reset">Reset Cart</span>
+      <button onClick={handlePayment}>PROCEED TO CHECKOUT</button>
+      <span className="reset" onClick={() => dispatch(resetCart())}>
+        Reset Cart
+      </span>
     </div>
   );
 };

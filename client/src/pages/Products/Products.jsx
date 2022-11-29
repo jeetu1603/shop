@@ -2,29 +2,45 @@ import React, { useState } from "react";
 import List from "../../components/List/List";
 import { useParams } from "react-router-dom";
 import "./Products.scss";
+import useFetch from "../../hooks/useFetch";
 
 const Products = () => {
   const catId = parseInt(useParams().id);
-  const [maxPrice, setMaxPrice] = useState(1000);
+  const [maxPrice, setMaxPrice] = useState(4000);
   const [sort, setSort] = useState(null);
+  const [selectedSubCats, setSelectedSubCats] = useState([]);
+
+  const { data, loading, error } = useFetch(
+    `/sub-categories?[filters][categories][id][$eq]=${catId}`
+  );
+
+  const handleChange = (e) => {
+    const value = e.target.value;
+    const isChecked = e.target.checked;
+
+    setSelectedSubCats(
+      isChecked
+        ? [...selectedSubCats, value]
+        : selectedSubCats.filter((item) => item !== value)
+    );
+  };
 
   return (
     <div className="products">
       <div className="left">
         <div className="filterItem">
           <h2>Product Categories</h2>
-          <div className="inputItem">
-            <input type="checkbox" name="shoes" id="shoes" />
-            <label htmlFor="shoes">shoes</label>
-          </div>
-          <div className="inputItem">
-            <input type="checkbox" name="skirts" id="skirts" />
-            <label htmlFor="skirts">skirts</label>
-          </div>
-          <div className="inputItem">
-            <input type="checkbox" name="coats" id="coats" />
-            <label htmlFor="coats">coats</label>
-          </div>
+          {data?.map((item) => (
+            <div className="inputItem" key={item.id}>
+              <input
+                type="checkbox"
+                id={item.id}
+                value={item.id}
+                onChange={handleChange}
+              />
+              <label htmlFor={item.id}>{item.attributes.title}</label>
+            </div>
+          ))}
         </div>
         <div className="filterItem">
           <h2>Filter by price</h2>
@@ -33,7 +49,7 @@ const Products = () => {
             <input
               type="range"
               min="0"
-              max="1000"
+              max="4000"
               onChange={(e) => setMaxPrice(e.target.value)}
             />
             <span>{maxPrice}</span>
@@ -67,7 +83,12 @@ const Products = () => {
           alt=""
           className="catImg"
         />
-        <List catId={catId} maxPrice={maxPrice} sort={sort} />
+        <List
+          catId={catId}
+          maxPrice={maxPrice}
+          sort={sort}
+          subCats={selectedSubCats}
+        />
       </div>
     </div>
   );

@@ -6,10 +6,12 @@ import FavoriteBorderOutlinedIcon from "@mui/icons-material/FavoriteBorderOutlin
 import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import { Link } from "react-router-dom";
 import Cart from "../Cart/Cart";
+import { useSelector } from "react-redux";
 import "./Navbar.scss";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
+  const products = useSelector((state) => state.cart.products);
 
   return (
     <div className="navbar">
@@ -24,13 +26,13 @@ const Navbar = () => {
             <KeyboardArrowDownIcon />
           </div>
           <Link className="link" to="/products/1">
-            <div className="item">Men</div>
+            <div className="item">Ladies</div>
           </Link>
           <Link className="link" to="/products/2">
-            <div className="item">Women</div>
+            <div className="item">Men</div>
           </Link>
           <Link className="link" to="/products/3">
-            <div className="item">Children</div>
+            <div className="item">Kids</div>
           </Link>
         </div>
         <div className="center">
@@ -57,7 +59,7 @@ const Navbar = () => {
             <FavoriteBorderOutlinedIcon />
             <div className="cartIcon" onClick={() => setOpen(!open)}>
               <ShoppingCartOutlinedIcon />
-              <span>0</span>
+              <span>{products.length}</span>
             </div>
           </div>
         </div>
